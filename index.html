@@ -1,0 +1,123 @@
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.min.js" integrity="sha512-Y8iWYJDo6HiTo5xtml1g4QqHtl/PO1w+dmUpQfQSOTqKNsMhExfyPN2ncNAe9JuJUSKzwK/b6oaNPop4MXzkwg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+    #myInput {
+        background-image: url('/css/searchicon.png'); /* Add a search icon to input */
+        background-position: 10px 12px; /* Position the search icon */
+        background-repeat: no-repeat; /* Do not repeat the icon image */
+        width: 100%; /* Full-width */
+        font-size: 16px; /* Increase font-size */
+        padding: 12px 20px 12px 40px; /* Add some padding */
+        border: 1px solid #ddd; /* Add a grey border */
+        margin-bottom: 12px; /* Add some space below the input */
+      }
+      
+      #nasaOpList, #maapList {
+        /* Remove default list styling */
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      
+      #nasaOpList li a, #maapList li a {
+        border: 1px solid #ddd; /* Add a border to all links */
+        margin-top: -1px; /* Prevent double borders */
+        background-color: #f6f6f6; /* Grey background color */
+        padding: 12px; /* Add some padding */
+        text-decoration: none; /* Remove default text underline */
+        font-size: 18px; /* Increase the font-size */
+        color: black; /* Add a black text color */
+        display: block; /* Make it into a block element to fill the whole list */
+      }
+      
+      #nasaOpList li a:hover:not(.header), #maapList li a:hover:not(.header) {
+        background-color: #eee; /* Add a hover effect to all links, except for headers */
+      }    
+</style>
+<div style="width:90%; margin:0px auto;">
+  <h1>Cross-Catalog Search Prototype</h1>
+  <p>Search across MAAP and NASA Earthdata Cloud collections.</p>
+  <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for names..">
+
+  <div style="width: 45%; margin-right: 5%; float:left;">
+    <h3>NASA Earthdata Cloud Collections</h3>
+    <ul id="nasaOpList">
+    </ul>
+  </div>
+  <div style="width: 45%; float: left;">
+    <h3>MAAP Collections</h3>
+    <ul id="maapList">
+    </ul>
+  </div>
+</div>
+
+<script>
+// LOAD file and split line by line and append divs
+var nasaOperationalCollections = [];
+$.get('https://maap-stac-assets.s3.amazonaws.com/nasa-operational-collections.csv', function(data) {    
+  nasaOperationalCollections = $.csv.toObjects(data);
+
+  $.each(nasaOperationalCollections, function(n, elem) {
+      $('#nasaOpList').append(
+        `<li>
+          <a href="${elem['stac_url']}" target='_blank'>STAC Link: ${elem['short_name']}</a>
+          <a href="${elem['cmr_url']}" target='_blank'>CMR Link: ${elem['short_name']}</a>
+          <br />
+        </li>`
+      );
+  });
+});
+
+var maapCollections = [];
+$.get('https://maap-stac-assets.s3.amazonaws.com/maap-collections.csv', function(data) {    
+  maapCollections = $.csv.toObjects(data);
+
+  $.each(maapCollections, function(n, elem) {
+      $('#maapList').append(
+        `<li>
+          <a href="${elem['stac_url']}" target='_blank'>STAC Link: ${elem['short_name']}</a>
+          <br />
+        </li>`
+      );
+  });
+});
+
+function myFunction() {
+    // Declare variables
+    var input, filter, ul, li, a, i, txtValue;
+    input = document.getElementById('myInput');
+    filter = input.value.toUpperCase();
+    ul = document.getElementById("nasaOpList");
+    li = ul.getElementsByTagName('li');
+
+    // Loop through all list items, and hide those who don't match the search query
+    for (i = 0; i < li.length; i++) {
+      a = li[i].getElementsByTagName("a")[0];
+      txtValue = a.textContent || a.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        li[i].style.display = "";
+      } else {
+        li[i].style.display = "none";
+      }
+    }
+
+    ul = document.getElementById("maapList");
+    li = ul.getElementsByTagName('li');
+    // Loop through all list items, and hide those who don't match the search query
+    for (i = 0; i < li.length; i++) {
+      a = li[i].getElementsByTagName("a")[0];
+      txtValue = a.textContent || a.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        li[i].style.display = "";
+      } else {
+        li[i].style.display = "none";
+      }
+    }    
+}
+</script>
