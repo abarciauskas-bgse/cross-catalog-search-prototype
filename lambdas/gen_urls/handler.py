@@ -7,25 +7,23 @@ from botocore.exceptions import ClientError
 # Fetch all collections from Earthdata Cloud
 # there's just under 2000 (1761)
 # TODO(aimee): implement paging since the number is expected to grow
-limit = 2000
 cmr_url = "https://cmr.earthdata.nasa.gov"
 
 def earthdata_collections_url(cloud_hosted=None, page_num=1):
-    url = f"{cmr_url}/search/collections.json?page_size={limit}&page_num={page_num}"
+    url = f"{cmr_url}/search/collections.json?page_num={page_num}"
     if cloud_hosted:
         return f"{url}&cloud_hosted=true"
     else:
         return url
 
-max_pages = 4
 def gen_cmr_collections():
     # collect results in a list of tuples (short_name, title, stac_url, cmr_url)
     results = []
     earthdata_stac_url = f"{cmr_url}/stac"
     earthdata_collections = [True]
     page_num = 1
-    while len(earthdata_collections) > 0 & page_num < max_pages:
-        response = requests.get(earthdata_collections_url(page_num=page_num))
+    while len(earthdata_collections) > 0:
+        response = requests.get(earthdata_collections_url(page_num=page_num, cloud_hosted=True))
         earthdata_collections = json.loads(response.text)['feed']['entry']    
         for collection in earthdata_collections:
             short_name = collection['short_name']
@@ -38,7 +36,8 @@ def gen_cmr_collections():
                 results.append((short_name, title, stac_url, f"{cmr_url}/collections.json?short_name={short_name}&version={version}"))
             else:
                 print(f"No STAC record found for {stac_url}")
-        return results
+        page_num += 1
+    return results
 
 maap_url = "https://stac.maap-project.org/collections"
 def gen_maap_collections():
